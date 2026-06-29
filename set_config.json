@@ -1,0 +1,164 @@
+{
+  "간편커피&유리머그 세트": [
+    {
+      "name": "클래식 핫브루 10개입",
+      "qty": 1,
+      "weight": "",
+      "option": ""
+    },
+    {
+      "name": "투명 유리머그",
+      "qty": 1,
+      "weight": "",
+      "option": ""
+    }
+  ],
+  "드립백&유리머그 세트": [
+    {
+      "name": "강릉 블렌드 10개입",
+      "qty": 2,
+      "weight": "",
+      "option": ""
+    },
+    {
+      "name": "투명 유리머그",
+      "qty": 1,
+      "weight": "",
+      "option": ""
+    }
+  ],
+  "[커피 페스타] 럭키백 3만원": [
+    {
+      "name": "파우더 커피(브라질)",
+      "qty": 1,
+      "weight": "",
+      "option": ""
+    },
+    {
+      "name": "클래식 핫브루 10개입",
+      "qty": 1,
+      "weight": "",
+      "option": ""
+    },
+    {
+      "name": "투명유리머그",
+      "qty": 1,
+      "weight": "",
+      "option": ""
+    },
+    {
+      "name": "리유저블 백",
+      "qty": 1,
+      "weight": "",
+      "option": ""
+    }
+  ],
+  "[커피 페스타] 럭키백 5만원": [
+    {
+      "name": "파우더 커피(과테말라)",
+      "qty": 1,
+      "weight": "",
+      "option": ""
+    },
+    {
+      "name": "파우더 커피(에티오피아)",
+      "qty": 1,
+      "weight": "",
+      "option": ""
+    },
+    {
+      "name": "딜라이트 스낵 쥬시 1개",
+      "qty": 1,
+      "weight": "",
+      "option": ""
+    },
+    {
+      "name": "클래식 핫브루 10개입",
+      "qty": 1,
+      "weight": "",
+      "option": ""
+    },
+    {
+      "name": "옥스포드 강릉 본점 블록",
+      "qty": 1,
+      "weight": "",
+      "option": ""
+    },
+    {
+      "name": "리유저블 백",
+      "qty": 1,
+      "weight": "",
+      "option": ""
+    }
+  ],
+  "[커피 페스타] 럭키백 7만원": [
+    {
+      "name": "파우더 커피(브라질)",
+      "qty": 1,
+      "weight": "",
+      "option": ""
+    },
+    {
+      "name": "파우더 커피(에티오피아)",
+      "qty": 1,
+      "weight": "",
+      "option": ""
+    },
+    {
+      "name": "파우더 커피(과테말라)",
+      "qty": 1,
+      "weight": "",
+      "option": ""
+    },
+    {
+      "name": "클래식 핫브루 10개입",
+      "qty": 1,
+      "weight": "",
+      "option": ""
+    },
+    {
+      "name": "딜라이트 스낵 쥬시 1개",
+      "qty": 1,
+      "weight": "",
+      "option": ""
+    },
+    {
+      "name": "옥스포드 강릉 본점 블록",
+      "qty": 1,
+      "weight": "",
+      "option": ""
+    },
+    {
+      "name": "미르 캠프컵(354ml) 민트",
+      "qty": 1,
+      "weight": "",
+      "option": ""
+    },
+    {
+      "name": "리유저블 백",
+      "qty": 1,
+      "weight": "",
+      "option": ""
+    }
+  ],
+  "[Limited edition] 강릉 드립백 20개입&옥스포드 블록 세트": [
+    {
+      "name": "강릉 블렌드 20개",
+      "qty": 1,
+      "weight": "",
+      "option": ""
+    },
+    {
+      "name": "옥스포드 강릉 본점 블록",
+      "qty": 1,
+      "weight": "",
+      "option": ""
+    },
+    {
+      "name": "리유저블 백",
+      "qty": 1,
+      "weight": "",
+      "option": ""
+    }
+  ]
+}
