@@ -6,7 +6,6 @@
 import json
 import re
 import os
-import sqlite3
 from copy import copy
 from datetime import datetime
 from io import BytesIO
@@ -33,55 +32,42 @@ CONFIG_PATH = Path("set_config.json")
 # ──────────────────────────────────────────────
 # 상품코드 DB (SQLite)
 # ──────────────────────────────────────────────
-DB_PATH = Path("product_codes.db")
+CODES_FILE = "product_codes.csv"
+META_FILE  = "product_codes_meta.json"
 
 def init_db():
-    con = sqlite3.connect(DB_PATH)
-    con.execute("""
-        CREATE TABLE IF NOT EXISTS product_codes (
-            code TEXT,
-            name TEXT,
-            option TEXT
-        )
-    """)
-    con.execute("""
-        CREATE TABLE IF NOT EXISTS db_meta (
-            key TEXT PRIMARY KEY,
-            value TEXT
-        )
-    """)
-    con.commit()
-    con.close()
+    pass  # GitHub 방식은 초기화 불필요
 
 def save_codes_to_db(df: pd.DataFrame):
-    """DataFrame → DB 저장 (기존 데이터 교체)"""
-    con = sqlite3.connect(DB_PATH)
-    con.execute("DELETE FROM product_codes")
-    df.iloc[:, :3].to_sql("product_codes", con, if_exists="append", index=False)
-    con.execute("INSERT OR REPLACE INTO db_meta VALUES ('updated_at', ?)",
-                (datetime.now().strftime("%Y-%m-%d %H:%M"),))
-    con.execute("INSERT OR REPLACE INTO db_meta VALUES ('row_count', ?)",
-                (str(len(df)),))
-    con.commit()
-    con.close()
+    """DataFrame → GitHub CSV 저장"""
+    if _USE_GITHUB:
+        from github_storage import gh_save_df, gh_save
+        gh_save_df(CODES_FILE, df.iloc[:, :3])
+        gh_save(META_FILE, {
+            "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "row_count": str(len(df)),
+        })
+    else:
+        # 로컬 fallback
+        df.iloc[:, :3].to_csv(CODES_FILE, index=False, encoding="utf-8")
 
 def load_codes_from_db() -> pd.DataFrame:
-    """DB → DataFrame"""
-    if not DB_PATH.exists():
-        return pd.DataFrame()
-    con = sqlite3.connect(DB_PATH)
-    df = pd.read_sql("SELECT * FROM product_codes", con)
-    con.close()
-    df.fillna("", inplace=True)
-    return df
+    """GitHub CSV → DataFrame"""
+    if _USE_GITHUB:
+        from github_storage import gh_load_df
+        return gh_load_df(CODES_FILE)
+    else:
+        try:
+            return pd.read_csv(CODES_FILE, dtype=str).fillna("")
+        except Exception:
+            return pd.DataFrame()
 
 def get_db_meta() -> dict:
-    if not DB_PATH.exists():
+    if _USE_GITHUB:
+        from github_storage import gh_load
+        return gh_load(META_FILE, {})
+    else:
         return {}
-    con = sqlite3.connect(DB_PATH)
-    rows = con.execute("SELECT key, value FROM db_meta").fetchall()
-    con.close()
-    return dict(rows)
 
 # ──────────────────────────────────────────────
 # 상수
@@ -823,15 +809,10 @@ with st.sidebar:
                                     st.session_state[f"editing_code_{i}"] = True
                             with ec2:
                                 if st.button("🗑️ 삭제", key=f"del_code_{i}", use_container_width=True):
-                                    con = sqlite3.connect(DB_PATH)
-                                    con.execute(
-                                        "DELETE FROM product_codes WHERE code=? AND name=? AND option=?",
-                                        (row.iloc[0], row.iloc[1], row.iloc[2])
-                                    )
-                                    # row_count 갱신
-                                    cnt = con.execute("SELECT COUNT(*) FROM product_codes").fetchone()[0]
-                                    con.execute("INSERT OR REPLACE INTO db_meta VALUES ('row_count', ?)", (str(cnt),))
-                                    con.commit(); con.close()
+                                    all_df2 = load_codes_from_db()
+                                    all_df2.columns = ["code", "name", "option"]
+                                    mask2 = ~((all_df2["code"] == row.iloc[0]) & (all_df2["name"] == row.iloc[1]) & (all_df2["option"] == row.iloc[2]))
+                                    save_codes_to_db(all_df2[mask2].reset_index(drop=True))
                                     st.success("삭제 완료")
                                     st.rerun()
                             if st.session_state.get(f"editing_code_{i}"):
@@ -839,12 +820,14 @@ with st.sidebar:
                                 new_name = st.text_input("상품명",   value=row.iloc[1], key=f"nname_{i}")
                                 new_opt  = st.text_input("옵션",     value=row.iloc[2], key=f"nopt_{i}")
                                 if st.button("저장", key=f"save_code_{i}", use_container_width=True):
-                                    con = sqlite3.connect(DB_PATH)
-                                    con.execute(
-                                        "UPDATE product_codes SET code=?, name=?, option=? WHERE code=? AND name=? AND option=?",
-                                        (new_code, new_name, new_opt, row.iloc[0], row.iloc[1], row.iloc[2])
-                                    )
-                                    con.commit(); con.close()
+                                    all_df3 = load_codes_from_db()
+                                    all_df3.columns = ["code", "name", "option"]
+                                    idx3 = all_df3[(all_df3["code"] == row.iloc[0]) & (all_df3["name"] == row.iloc[1]) & (all_df3["option"] == row.iloc[2])].index
+                                    if len(idx3) > 0:
+                                        all_df3.loc[idx3[0], "code"] = new_code
+                                        all_df3.loc[idx3[0], "name"] = new_name
+                                        all_df3.loc[idx3[0], "option"] = new_opt
+                                    save_codes_to_db(all_df3)
                                     st.session_state.pop(f"editing_code_{i}", None)
                                     st.success("수정 완료")
                                     st.rerun()
@@ -865,13 +848,7 @@ with st.sidebar:
             if st.button("💾 변경사항 저장", key="btn_save_edited", use_container_width=True):
                 edited.columns = ["code", "name", "option"]
                 edited = edited.dropna(subset=["code", "name"]).reset_index(drop=True)
-                con = sqlite3.connect(DB_PATH)
-                con.execute("DELETE FROM product_codes")
-                edited.to_sql("product_codes", con, if_exists="append", index=False)
-                con.execute("INSERT OR REPLACE INTO db_meta VALUES ('row_count', ?)", (str(len(edited)),))
-                con.execute("INSERT OR REPLACE INTO db_meta VALUES ('updated_at', ?)",
-                            (datetime.now().strftime("%Y-%m-%d %H:%M"),))
-                con.commit(); con.close()
+                save_codes_to_db(edited)
                 st.success(f"✅ {len(edited)}개 저장 완료")
                 st.rerun()
 
@@ -1032,7 +1009,7 @@ with col2:
 st.divider()
 
 # ── 처리 및 다운로드 ──
-db_ready = DB_PATH.exists() and not load_codes_from_db().empty
+db_ready = not load_codes_from_db().empty
 if order_file and db_ready:
     if st.button("🚀 주문 취합 처리 시작", use_container_width=True):
         with st.spinner("처리 중..."):
