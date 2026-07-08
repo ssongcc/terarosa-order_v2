@@ -227,7 +227,7 @@ def extract_weight(text: str):
         rest = (text[:m.start()] + text[m.end():]).strip().strip("/").strip()
         return w, rest
     return "", text
-    
+
 def split_item(raw_name: str):
     if "[커피 페스타 1+1]" in raw_name and ("KING콩" in raw_name or "King콩" in raw_name):
         item_part = raw_name.split("_", 1)[0].strip() if "_" in raw_name else raw_name
@@ -279,14 +279,11 @@ def split_item(raw_name: str):
     if "무료원두 쿠폰" in raw_name:
         return "무료원두 쿠폰 250g", "250g", "증정 원두"
 
+    # ★ 수정: 이 달의 킹콩 → [7월 KING콩] 코스타리카 치리포 리카르도 카투아이 허니 (1:1 매핑)
     if "이 달의 킹콩" in raw_name \
             or "이달의 킹콩" in raw_name:
-        return [
-            ("[커피 페스타 1+1] 6월 KING콩 브라질 산투안토니우 엔리케",
-             "250g", "플러스쿠폰"),
-            ("[커피 페스타 1+1] 6월 KING콩 에티오피아 시다마 벤사",
-             "250g", "플러스쿠폰"),
-        ]
+        return ("[7월 KING콩] 코스타리카 치리포 리카르도 카투아이 허니",
+                "500g", "플러스쿠폰")
 
     if "이 달의 드립백" in raw_name or "이달의 드립백" in raw_name:
         if "_" in raw_name:
@@ -318,8 +315,7 @@ def split_item(raw_name: str):
     return raw_name, "", ""
 
 def resolve_kingkong_name(df):
-    # 이달의 킹콩은 split_item에서
-    # 브라질/에티오피아 2행으로 분리 처리됨
+    # 이달의 킹콩은 split_item에서 처리됨
     return df
 
 def clean_kingkong_options(df: pd.DataFrame) -> pd.DataFrame:
@@ -445,7 +441,7 @@ def build_sheet3(raw_df: pd.DataFrame) -> pd.DataFrame:
         if qty > 0:
             rows.append({"품목명": "옥스포드 피규어", "빈칸": "", "이름": label, "수량": qty})
     return pd.DataFrame(rows)
-    
+
 def build_sheet2(main_df: pd.DataFrame) -> pd.DataFrame:
     rows = {}
     king_mask = (
@@ -542,6 +538,7 @@ def insert_sheet3_into_sheet1(wb: Workbook):
 def postprocess_festa_rows(ws):
     # ── 1순위: 커피 페스타 포함 행 하늘색 ──
     FILL_FESTA = PatternFill("solid", fgColor="DDEEFF")
+    FILL_BLANK = PatternFill("solid", fgColor=COLOR_WHITE)
     for row in ws.iter_rows():
         a_val = row[0].value
         if a_val and "커피 페스타" in str(a_val):
